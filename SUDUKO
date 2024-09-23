@@ -1,0 +1,104 @@
+import java.util.stream.IntStream;
+
+public class SudokuSolverWithPipes {
+    private static final int BOX_SIZE = 3;
+    private static final int GRID_SIZE = BOX_SIZE * BOX_SIZE;
+
+    public static void main(String[] args) {
+        int[][] board = {
+                {0, 0, 0, 6, 0, 0, 4, 0, 0},
+                {7, 0, 0, 0, 0, 3, 6, 0, 0},
+                {0, 0, 0, 0, 9, 1, 0, 8, 0},
+                {0, 0, 0, 0, 0, 0, 0, 0, 0},
+                {0, 5, 0, 1, 8, 0, 0, 0, 3},
+                {0, 0, 0, 3, 0, 6, 0, 4, 5},
+                {0, 4, 0, 2, 0, 0, 0, 6, 0},
+                {9, 0, 3, 0, 0, 0, 0, 0, 0},
+                {0, 2, 0, 0, 0, 0, 1, 0, 0}
+        };
+        if (solve(board)) {
+            System.out.println("Solved Sudoku:");
+            printResult(board);
+        } else {
+            System.out.println("Oops :(");
+        }
+    }
+
+    private static void printResult(int[][] board) {
+        // Print top border of the whole grid
+        System.out.println("+---------+---------+---------+");
+
+        for (int row = 0; row < GRID_SIZE; row++) {
+            for (int col = 0; col < GRID_SIZE; col++) {
+                if (col % BOX_SIZE == 0 && col != 0) {
+                    System.out.print("I"); // Vertical separator between subgrids
+                } else if (col == 0) {
+                    System.out.print("I"); // Left edge of the grid
+                }
+
+                // Display the numbers, enclosed in "|__|" format
+                final int cellValue = board[row][col];
+                if (cellValue == 0) {
+                    System.out.print("|__|"); // Empty cell represented by |__|
+                } else {
+                    System.out.print("|" + cellValue + "|"); // Enclose the number with |__|
+                }
+            }
+            System.out.println("I");  // Right edge of the grid
+
+            // Print a horizontal line after every 3 rows
+            if ((row + 1) % BOX_SIZE == 0) {
+                System.out.println("+---------+---------+---------+");
+            }
+        }
+    }
+
+    private static boolean allowedInRow(int[][] board, int row, int number) {
+        return IntStream.range(0, GRID_SIZE)
+                .noneMatch(col -> board[row][col] == number);
+    }
+
+    private static boolean allowedInCol(int[][] board, int col, int number) {
+        return IntStream.range(0, GRID_SIZE)
+                .noneMatch(row -> board[row][col] == number);
+    }
+
+    private static boolean allowedInBox(int[][] board, int row, int col, int number) {
+        final int boxCol = col - (col % BOX_SIZE);
+        final int boxRow = row - (row % BOX_SIZE);
+        for (int i = 0; i < BOX_SIZE; i++) {
+            for (int j = 0; j < BOX_SIZE; j++) {
+                if (board[boxRow + i][boxCol + j] == number) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private static boolean isAllowed(int[][] board, int row, int col, int number) {
+        return allowedInRow(board, row, number) &&
+                allowedInCol(board, col, number) &&
+                allowedInBox(board, row, col, number);
+    }
+
+    private static boolean solve(int[][] board) {
+        for (int row = 0; row < GRID_SIZE; row++) {
+            for (int col = 0; col < GRID_SIZE; col++) {
+                if (board[row][col] == 0) {
+                    for (int num = 1; num <= GRID_SIZE; num++) {
+                        if (isAllowed(board, row, col, num)) {
+                            board[row][col] = num;
+                            if (solve(board)) {
+                                return true;
+                            }
+                            board[row][col] = 0;
+                        }
+                    }
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
